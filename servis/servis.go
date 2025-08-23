@@ -49,24 +49,24 @@ func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
 	//TODO- we should verify phone number by verification code
 
 	if !phonenumber.IsValid(req.PhoneNumber) {
+
 		return RegisterResponse{}, errors.New("invalid phone number")
 	}
 	if isUniq, err := s.repo.IsUniquePhoneNumber(req.PhoneNumber); err != nil || !isUniq {
 		if err != nil {
-			return RegisterResponse{}, err
-		}
 
-		if !isUniq {
-			return RegisterResponse{}, errors.New("phone number is not unique")
+			return RegisterResponse{}, err
 		}
 	}
 	//TODO - The password must be strong.
 	if len(req.Password) < 7 {
+
 		return RegisterResponse{}, errors.New("password must be at least 7 characters")
 	}
 
 	hashPass, hErr := hashPassword.HashPassword(req.Password)
 	if hErr != nil {
+
 		return RegisterResponse{}, hErr
 	}
 
@@ -79,6 +79,7 @@ func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
 
 	createdUser, rErr := s.repo.Register(user)
 	if rErr != nil {
+
 		return RegisterResponse{}, fmt.Errorf("unxeopted error: %w", rErr)
 	}
 	//var resp RegisterResponse
@@ -94,18 +95,30 @@ func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
 	}{ID: createdUser.ID,
 		PhoneNumber: req.PhoneNumber,
 		Name:        req.Name}}
+
 	return resp, nil
 }
 
 // TODO - please implement me
+
+type UserInfo struct {
+	ID          uint   `json:"id"`
+	PhoneNumber string `json:"phone_number"`
+	Name        string `json:"name"`
+}
+
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
 type LoginRequest struct {
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
 }
 
 type LoginResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	User  UserInfo      `json:"user"`
+	Token TokenResponse `json:"token"`
 }
 
 func (s Service) Login(req LoginRequest) (LoginResponse, error) {
@@ -138,7 +151,17 @@ func (s Service) Login(req LoginRequest) (LoginResponse, error) {
 		return LoginResponse{}, fmt.Errorf("enxepted error %w", rErr)
 
 	}
-	return LoginResponse{AccessToken: accesstoken, RefreshToken: refreshToken}, err
+	return LoginResponse{
+		User: UserInfo{
+			ID:          user.ID,
+			PhoneNumber: user.PhoneNumber,
+			Name:        user.Name,
+		},
+		Token: TokenResponse{
+			AccessToken:  accesstoken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
 }
 
 type ProfileRequest struct {
@@ -159,5 +182,6 @@ func (s Service) Profile(req ProfileRequest) (ProfileResponse, error) {
 	fmt.Println(user.Name)
 
 	fmt.Println(user.Name)
+
 	return ProfileResponse{Name: user.Name}, nil
 }

@@ -34,10 +34,13 @@ func (s Server) Serve() {
 	e.Use(middleware.Recover())
 
 	// routers
+
+	userGroup := e.Group("/users")
+	userGroup.POST("/register", s.UserRegisterHandler)
+	userGroup.POST("/login", s.LoginHandler)
+	userGroup.GET("/profile", s.UserProfileHandler)
+
 	e.GET("/health-check", s.HealthCheck)
-	e.POST("/users/register", s.UserRegisterHandler)
-	e.POST("/users/login", s.LoginHandler)
-	e.GET("/users/profile", s.UserProfileHandler)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", s.config.HTTPServerConfig.Port)))
 }

@@ -7,14 +7,18 @@ import (
 )
 
 func (s Server) UserProfileHandler(c echo.Context) error {
-	var uReq servis.ProfileRequest
-	if err := c.Bind(&uReq); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+	authToken := c.Request().Header.Get("Authorization")
+	if authToken == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Authorization header is empty")
 	}
-	profileResponse, pErr := s.userSvc.Profile(uReq)
+	claim, pErr := s.authSvc.ParseToken(authToken)
 	if pErr != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+		return echo.NewHTTPError(http.StatusUnauthorized, pErr.Error())
 	}
-	return c.JSON(http.StatusOK, profileResponse)
+	response, pErr := s.userSvc.Profile(servis.ProfileRequest{UserID: claim.UserID})
+	if pErr != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, pErr.Error())
+	}
 
+	return c.JSON(http.StatusOK, response)
 }
