@@ -34,7 +34,11 @@ type RegisterUser struct {
 }
 
 type RegisterResponse struct {
-	User entity.User
+	User struct {
+		ID          uint   `json:"id"`
+		PhoneNumber string `json:"phone_number"`
+		Name        string `json:"name"`
+	} `json:"user"`
 }
 
 func New(authgenerator AuthGenerator, repo *mysql.MySqlDb) Service {
@@ -73,12 +77,24 @@ func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
 		Password:    hashPass,
 	}
 
-	u, rErr := s.repo.Register(user)
+	createdUser, rErr := s.repo.Register(user)
 	if rErr != nil {
 		return RegisterResponse{}, fmt.Errorf("unxeopted error: %w", rErr)
 	}
-	return RegisterResponse{User: u}, nil
+	//var resp RegisterResponse
+	//resp.User.ID = createdUser.ID
+	//resp.User.PhoneNumber = createdUser.PhoneNumber
+	//resp.User.Name = createdUser.Name
+	//return resp, nil
 
+	resp := RegisterResponse{struct {
+		ID          uint   `json:"id"`
+		PhoneNumber string `json:"phone_number"`
+		Name        string `json:"name"`
+	}{ID: createdUser.ID,
+		PhoneNumber: req.PhoneNumber,
+		Name:        req.Name}}
+	return resp, nil
 }
 
 // TODO - please implement me
