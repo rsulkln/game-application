@@ -5,6 +5,7 @@ import (
 	"game/config"
 	_const "game/const"
 	"game/delivery/httpserver"
+	"game/repository/migrator"
 
 	"game/repository/mysql"
 	userservice "game/servis"
@@ -28,6 +29,10 @@ func main() {
 			Database: "game_application",
 		},
 	}
+
+	mgr := migrator.New(cfg.Mysql)
+	mgr.Up()
+
 	authsvc, usersvg := setUpServices(cfg)
 	server := httpserver.New(cfg, authsvc, usersvg)
 	server.Serve()

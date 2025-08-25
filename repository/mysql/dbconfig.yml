@@ -1,5 +1,5 @@
 production:
   dialect: mysql
   datasource: rasool:60BA944D1AACA915C803676D11C105A2@tcp(localhost:3306)/game_application?parseTime=true
-  dir: migrations
+  dir: repository/mysql/migrations
   table: migrations
