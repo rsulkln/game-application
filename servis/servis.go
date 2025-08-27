@@ -7,6 +7,7 @@ import (
 	"game/entity"
 	"game/pkg/hashPassword"
 	"game/pkg/phonenumber"
+	"game/pkg/richerror"
 	"game/repository/mysql"
 )
 
@@ -122,10 +123,13 @@ type LoginResponse struct {
 }
 
 func (s Service) Login(req LoginRequest) (LoginResponse, error) {
-
+	const op = "servis.login"
 	user, exist, err := s.repo.GetUserByPhoneNumber(req.PhoneNumber)
 	if err != nil {
-		return LoginResponse{}, err
+		return LoginResponse{}, richerror.
+			New(op).
+			WithError(err).
+			WithMeta(map[string]interface{}{"phone req ": req.PhoneNumber})
 	}
 	if !exist {
 		return LoginResponse{}, fmt.Errorf("username or password is not correct")
@@ -173,11 +177,16 @@ type ProfileResponse struct {
 }
 
 func (s Service) Profile(req ProfileRequest) (ProfileResponse, error) {
+	const op = "servis.Profile"
+
 	user, err := s.repo.GetUserByID(req.UserID)
 	//log.Fatal("req :", req.UserID)
 	if err != nil {
 
-		return ProfileResponse{}, fmt.Errorf("unexepted error %w", err)
+		return ProfileResponse{},
+			richerror.New(op).
+				WithError(err).
+				WithMeta(map[string]interface{}{"req": req})
 	}
 	fmt.Println(user.Name)
 

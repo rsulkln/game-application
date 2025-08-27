@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
                        id int primary key AUTO_INCREMENT,
                        name varchar(255) not null,
                        phone_number varchar(255) unique,

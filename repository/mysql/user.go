@@ -3,7 +3,9 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"game/const/errormessage"
 	"game/entity"
+	"game/pkg/richerror"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -36,21 +38,27 @@ func (d MySqlDb) Register(user entity.User) (entity.User, error) {
 }
 
 func (d MySqlDb) GetUserByPhoneNumber(phoneNumber string) (entity.User, bool, error) {
-	// TODO - "It would be better to split the method that handles two different tasks."
+	const op = "mysql.GetUserByPhoneNumber"
 
 	row := d.db.QueryRow(`SELECT * FROM users WHERE phone_number = ?`, phoneNumber)
 	user, err := ScanUser(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return entity.User{}, false, nil
+			return entity.User{}, false, richerror.
+				New(op).
+				WithError(err).
+				WithMassage(errormessage.NotFound)
 		}
-		return entity.User{}, false, fmt.Errorf("mysql query row scan error: %w", err)
+		return entity.User{}, false, richerror.
+			New(op).
+			WithError(err).
+			WithMassage(errormessage.CantScanQueryResult)
 	}
 	return user, true, nil
 }
 
 func (d MySqlDb) GetUserByID(userID uint) (entity.User, error) {
-	// TODO - "It would be better to split the method that handles two different tasks."
+	const op = "mysql.GetUserByID"
 
 	row := d.db.QueryRow(`SELECT * FROM users WHERE id = ?`, userID)
 
@@ -58,9 +66,19 @@ func (d MySqlDb) GetUserByID(userID uint) (entity.User, error) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 
-			return entity.User{}, nil
+			return entity.User{},
+				richerror.
+					New(op).
+					WithError(err).
+					WithMassage(errormessage.NotFound).
+					WithKind(richerror.KindNotFound)
 		}
-		return entity.User{}, fmt.Errorf("mysql query row scan error: %w", err)
+		return entity.User{},
+			richerror.
+				New(op).
+				WithError(err).
+				WithMassage(errormessage.CantScanQueryResult).
+				WithKind(richerror.KindUnExepted)
 	}
 	fmt.Println("name:", user.Name)
 	return user, nil

@@ -6,5 +6,6 @@ type User struct {
 	Name        string `json:"name"`
 
 	//password always keep hashed password
-	Password string `json:"-"`
+	Password  string `json:"-"`
+	CreatedAt int64  `json:"created_at"`
 }

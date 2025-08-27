@@ -6,7 +6,6 @@ import (
 	_const "game/const"
 	"game/delivery/httpserver"
 	"game/repository/migrator"
-
 	"game/repository/mysql"
 	userservice "game/servis"
 )
