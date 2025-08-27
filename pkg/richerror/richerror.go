@@ -53,9 +53,23 @@ func (r RichError) WithMeta(meta map[string]interface{}) RichError {
 }
 
 func (r RichError) Kind() Kind {
-	return r.kind
+	if r.kind != 0 {
+		return r.kind
+	}
+	re, ok := r.wrappedError.(RichError)
+	if !ok {
+		return 0
+	}
+	return re.kind
 }
 
 func (r RichError) Massage() string {
-	return r.message
+	if r.message != "" {
+		return r.message
+	}
+	re, ok := r.wrappedError.(RichError)
+	if !ok {
+		return r.wrappedError.Error()
+	}
+	return re.message
 }
