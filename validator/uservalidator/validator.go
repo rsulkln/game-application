@@ -24,7 +24,7 @@ func New(repository Repository) Validator {
 
 }
 
-func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) (error, map[string]string) {
+func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) (map[string]string, error) {
 	const op = "uservalidator.RegisteValidationRequest"
 	var passwordRegex = regexp.MustCompile(`^[A-Za-z\d!@#\$%\^&\*]{8,}$`)
 
@@ -45,12 +45,12 @@ func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) (error, map
 			}
 		}
 
-		return richerror.
+		return FieldError, richerror.
 			New(op).
 			WithMassage(errormessage.InvalidInput).
 			WithKind(richerror.KindInvalid).
 			WithMeta(map[string]interface{}{"req": req}).
-			WithError(vErr), FieldError
+			WithError(vErr)
 	}
 
 	return nil, nil
