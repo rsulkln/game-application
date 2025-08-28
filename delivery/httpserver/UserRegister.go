@@ -8,7 +8,7 @@ import (
 )
 
 func (s Server) UserRegisterHandler(c echo.Context) error {
-	var uReq userservice.RegisterUser
+	var uReq userservice.RegisterRequest
 
 	if bErr := c.Bind(&uReq); bErr != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)

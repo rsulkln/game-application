@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	_const "game/const"
+	"game/dto"
 	"game/entity"
 	"game/pkg/hashPassword"
 	"game/pkg/phonenumber"
@@ -12,7 +13,6 @@ import (
 )
 
 type Repository interface {
-	IsUniquePhoneNumber(phoneNumber string) (bool, error)
 	Register(user entity.User) (entity.User, error)
 	GetUserByPhoneNumber(phoneNumber string) (entity.User, bool, error)
 	GetUserByID(userID uint) (entity.User, error)
@@ -28,48 +28,12 @@ type Service struct {
 	repo Repository
 }
 
-type RegisterUser struct {
-	Name        string `json:"name"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-}
-
-type RegisterResponse struct {
-	User struct {
-		ID          uint   `json:"id"`
-		PhoneNumber string `json:"phone_number"`
-		Name        string `json:"name"`
-	} `json:"user"`
-}
-
 func New(authgenerator AuthGenerator, repo *mysql.MySqlDb) Service {
 	return Service{auth: authgenerator, repo: repo}
 }
 
-func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
+func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error) {
 	//TODO- we should verify phone number by verification code
-
-	if !phonenumber.IsValid(req.PhoneNumber) {
-
-		return RegisterResponse{}, errors.New("invalid phone number")
-	}
-	if isUniq, err := s.repo.IsUniquePhoneNumber(req.PhoneNumber); err != nil || !isUniq {
-		if err != nil {
-
-			return RegisterResponse{}, err
-		}
-	}
-	//TODO - The password must be strong.
-	if len(req.Password) < 7 {
-
-		return RegisterResponse{}, errors.New("password must be at least 7 characters")
-	}
-
-	hashPass, hErr := hashPassword.HashPassword(req.Password)
-	if hErr != nil {
-
-		return RegisterResponse{}, hErr
-	}
 
 	user := entity.User{
 		ID:          0,
@@ -81,7 +45,7 @@ func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
 	createdUser, rErr := s.repo.Register(user)
 	if rErr != nil {
 
-		return RegisterResponse{}, fmt.Errorf("unxeopted error: %w", rErr)
+		return dto.RegisterResponse{}, fmt.Errorf("unxeopted error: %w", rErr)
 	}
 	//var resp RegisterResponse
 	//resp.User.ID = createdUser.ID
@@ -89,7 +53,7 @@ func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
 	//resp.User.Name = createdUser.Name
 	//return resp, nil
 
-	resp := RegisterResponse{struct {
+	resp := dto.RegisterResponse{struct {
 		ID          uint   `json:"id"`
 		PhoneNumber string `json:"phone_number"`
 		Name        string `json:"name"`
@@ -102,12 +66,6 @@ func (s Service) Register(req RegisterUser) (RegisterResponse, error) {
 
 // TODO - please implement me
 
-type UserInfo struct {
-	ID          uint   `json:"id"`
-	PhoneNumber string `json:"phone_number"`
-	Name        string `json:"name"`
-}
-
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -118,7 +76,7 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	User  UserInfo      `json:"user"`
+	User  dto.UserInfo  `json:"user"`
 	Token TokenResponse `json:"token"`
 }
 
@@ -156,7 +114,7 @@ func (s Service) Login(req LoginRequest) (LoginResponse, error) {
 
 	}
 	return LoginResponse{
-		User: UserInfo{
+		User: dto.UserInfo{
 			ID:          user.ID,
 			PhoneNumber: user.PhoneNumber,
 			Name:        user.Name,
