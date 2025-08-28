@@ -7,7 +7,6 @@ import (
 	"game/dto"
 	"game/entity"
 	"game/pkg/hashPassword"
-	"game/pkg/phonenumber"
 	"game/pkg/richerror"
 	"game/repository/mysql"
 )
@@ -35,11 +34,16 @@ func New(authgenerator AuthGenerator, repo *mysql.MySqlDb) Service {
 func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error) {
 	//TODO- we should verify phone number by verification code
 
+	ps, err := hashPassword.HashPassword(req.Password)
+	if err != nil {
+		return dto.RegisterResponse{}, fmt.Errorf("i can't hashed password: %w", err)
+	}
+
 	user := entity.User{
 		ID:          0,
 		PhoneNumber: req.PhoneNumber,
 		Name:        req.Name,
-		Password:    hashPass,
+		Password:    ps,
 	}
 
 	createdUser, rErr := s.repo.Register(user)
@@ -47,11 +51,6 @@ func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error)
 
 		return dto.RegisterResponse{}, fmt.Errorf("unxeopted error: %w", rErr)
 	}
-	//var resp RegisterResponse
-	//resp.User.ID = createdUser.ID
-	//resp.User.PhoneNumber = createdUser.PhoneNumber
-	//resp.User.Name = createdUser.Name
-	//return resp, nil
 
 	resp := dto.RegisterResponse{struct {
 		ID          uint   `json:"id"`

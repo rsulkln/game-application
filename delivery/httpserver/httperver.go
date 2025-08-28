@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"game/auth"
 	"game/config"
+	"game/validator/uservalidator"
 
 	userservice "game/servis"
 	"github.com/labstack/echo/v4"
@@ -11,16 +12,18 @@ import (
 )
 
 type Server struct {
-	config  config.Config
-	authSvc auth.Serivce
-	userSvc userservice.Service
+	config        config.Config
+	authSvc       auth.Serivce
+	userSvc       userservice.Service
+	userValidator uservalidator.Validator
 }
 
-func New(config config.Config, authSvc auth.Serivce, userSvc userservice.Service) Server {
+func New(config config.Config, authSvc auth.Serivce, userSvc userservice.Service, userValidator uservalidator.Validator) Server {
 	return Server{
-		config:  config,
-		authSvc: authSvc,
-		userSvc: userSvc,
+		config:        config,
+		authSvc:       authSvc,
+		userSvc:       userSvc,
+		userValidator: userValidator,
 	}
 }
 

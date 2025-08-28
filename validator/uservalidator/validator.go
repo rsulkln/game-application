@@ -1,6 +1,7 @@
 package uservalidator
 
 import (
+	"fmt"
 	"game/const/errormessage"
 	"regexp"
 
@@ -23,35 +24,47 @@ func New(repository Repository) Validator {
 
 }
 
-func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) error {
+func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) (error, map[string]string) {
 	const op = "uservalidator.RegisteValidationRequest"
-	var passwordRegex = regexp.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[A-Za-z\d!@#\$%\^&\*]{8,}$`)
+	var passwordRegex = regexp.MustCompile(`^[A-Za-z\d!@#\$%\^&\*]{8,}$`)
 
 	if vErr := validation.ValidateStruct(&req,
 		validation.Field(&req.Name, validation.Required, validation.Length(3, 50)),
 		validation.Field(&req.Password, validation.Required, validation.Match(passwordRegex)),
-		validation.Field(&req.PhoneNumber, validation.Required, validation.Match(regexp.MustCompile(`^09[0-9]{9}$`))),
+		validation.Field(&req.PhoneNumber, validation.Required, validation.Match(regexp.MustCompile(`^09[0-9]{9}$`)),
+			validation.By(v.CheckPhonneNumberIsUniqeness)),
 	); vErr != nil {
+
+		FieldError := make(map[string]string)
+		errV, ok := vErr.(validation.Errors)
+		if ok {
+			for key, val := range errV {
+				if val != nil {
+					FieldError[key] = val.Error()
+				}
+			}
+		}
 
 		return richerror.
 			New(op).
 			WithMassage(errormessage.InvalidInput).
 			WithKind(richerror.KindInvalid).
 			WithMeta(map[string]interface{}{"req": req}).
-			WithError(vErr)
-
+			WithError(vErr), FieldError
 	}
 
-	if isUniq, err := v.repo.IsUniquePhoneNumber(req.PhoneNumber); err != nil || !isUniq {
+	return nil, nil
+}
+
+func (v Validator) CheckPhonneNumberIsUniqeness(value interface{}) error {
+	phoneNumber := value.(string)
+	if isUniq, err := v.repo.IsUniquePhoneNumber(phoneNumber); err != nil || !isUniq {
 		if err != nil {
-			richerror.New(op).WithError(err)
+			return err
 		}
 		if !isUniq {
-			return richerror.
-				New(op).
-				WithMassage(errormessage.PhoneNumberNotUniq).
-				WithKind(richerror.KindInvalid).
-				WithMeta(map[string]interface{}{"phone Number": req.PhoneNumber})
+			fmt.Errorf(errormessage.PhoneNumberNotUniq)
 		}
 	}
+	return nil
 }
