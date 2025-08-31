@@ -26,7 +26,9 @@ func (s Server) UserRegisterHandler(c echo.Context) error {
 
 	response, rErr := s.userSvc.Register(uReq)
 	if rErr != nil {
+
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
+
 	return c.JSON(http.StatusCreated, response)
 }
