@@ -4,26 +4,22 @@ import (
 	"fmt"
 	"game/auth"
 	"game/config"
-	"game/validator/uservalidator"
-
+	"game/delivery/httpserver/userhandler"
 	userservice "game/servis"
+	"game/validator/uservalidator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 type Server struct {
-	config        config.Config
-	authSvc       auth.Serivce
-	userSvc       userservice.Service
-	userValidator uservalidator.Validator
+	config      config.Config
+	userHandler userhandler.Handler
 }
 
 func New(config config.Config, authSvc auth.Serivce, userSvc userservice.Service, userValidator uservalidator.Validator) Server {
 	return Server{
-		config:        config,
-		authSvc:       authSvc,
-		userSvc:       userSvc,
-		userValidator: userValidator,
+		config:      config,
+		userHandler: userhandler.New(authSvc, userSvc, userValidator),
 	}
 }
 
@@ -37,13 +33,8 @@ func (s Server) Serve() {
 	e.Use(middleware.Recover())
 
 	// routers
-
-	userGroup := e.Group("/users")
-	userGroup.POST("/register", s.UserRegisterHandler)
-	userGroup.POST("/login", s.LoginHandler)
-	userGroup.GET("/profile", s.UserProfileHandler)
-
 	e.GET("/health-check", s.HealthCheck)
+	s.userHandler.SetUserRoute(e)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", s.config.HTTPServerConfig.Port)))
 }

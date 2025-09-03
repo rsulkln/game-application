@@ -16,8 +16,13 @@ func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) (map[string
 
 	if vErr := validation.ValidateStruct(&req,
 		validation.Field(&req.Name, validation.Required, validation.Length(3, 50)),
-		validation.Field(&req.Password, validation.Required, validation.Match(regexp.MustCompile(PasswordRegex))),
-		validation.Field(&req.PhoneNumber, validation.Required, validation.Match(regexp.MustCompile(PhoneNUmberRegex)),
+
+		validation.Field(&req.Password, validation.Required, validation.
+			Match(regexp.MustCompile(PasswordRegex))),
+
+		validation.Field(&req.PhoneNumber, validation.Required, validation.
+			Match(regexp.MustCompile(PhoneNUmberRegex)).Error(errormessage.PhoneNumberIsNotValid),
+
 			validation.By(v.CheckPhonneNumberIsUniqeness)),
 	); vErr != nil {
 

@@ -1,21 +1,20 @@
-package httpserver
+package userhandler
 
 import (
 	"game/dto"
 	"game/pkg/httpmsg"
 	"github.com/labstack/echo/v4"
-
 	"net/http"
 )
 
-func (s Server) UserRegisterHandler(c echo.Context) error {
+func (h Handler) UserRegisterHandler(c echo.Context) error {
 	var uReq dto.RegisterRequest
 
 	if bErr := c.Bind(&uReq); bErr != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
-	if fieldsError, err := s.userValidator.RegisteValidationRequest(uReq); err != nil {
+	if fieldsError, err := h.userValidator.RegisteValidationRequest(uReq); err != nil {
 		msg, code := httpmsg.CodeAndMessage(err)
 
 		return c.JSON(code, echo.Map{
@@ -24,7 +23,7 @@ func (s Server) UserRegisterHandler(c echo.Context) error {
 		})
 	}
 
-	response, rErr := s.userSvc.Register(uReq)
+	response, rErr := h.userSvc.Register(uReq)
 	if rErr != nil {
 
 		return echo.NewHTTPError(http.StatusBadRequest)

@@ -1,18 +1,29 @@
-package httpserver
+package userhandler
 
 import (
 	"game/dto"
+	"game/pkg/httpmsg"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-func (s Server) LoginHandler(c echo.Context) error {
+func (h Handler) LoginHandler(c echo.Context) error {
 	var lReq dto.LoginRequest
 	if err := c.Bind(&lReq); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)
 
 	}
-	resp, lErr := s.userSvc.Login(lReq)
+
+	if fieldsError, err := h.userValidator.LoginValidationRequest(lReq); err != nil {
+		msg, code := httpmsg.CodeAndMessage(err)
+
+		return c.JSON(code, echo.Map{
+			"message":     msg,
+			"error field": fieldsError,
+		})
+	}
+
+	resp, lErr := h.userSvc.Login(lReq)
 	if lErr != nil {
 
 		return echo.NewHTTPError(http.StatusBadRequest)

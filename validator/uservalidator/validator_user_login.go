@@ -14,9 +14,16 @@ func (v Validator) LoginValidationRequest(req dto.LoginRequest) (map[string]stri
 	const op = "uservalidator.RegisteValidationRequest"
 
 	if vErr := validation.ValidateStruct(&req,
+
 		validation.Field(&req.PhoneNumber,
+
 			validation.Required,
-			validation.Match(regexp.MustCompile(PhoneNUmberRegex))),
+
+			validation.Match(regexp.MustCompile(PhoneNUmberRegex)).Error(errormessage.PhoneNumberIsNotValid),
+
+			validation.By(v.DosNumberIsExists)),
+			
+		validation.Field(&req.PhoneNumber, validation.Required),
 	); vErr != nil {
 
 		FieldError := make(map[string]string)
