@@ -1,18 +1,17 @@
 package uservalidator
 
 import (
-	"fmt"
-	"game/const/errormessage"
-	"regexp"
+	"game/entity"
+)
 
-	"game/dto"
-	"github.com/go-ozzo/ozzo-validation/v4"
-
-	"game/pkg/richerror"
+const (
+	PhoneNUmberRegex = `^09[0-9]{9}$`
+	PasswordRegex    = `^[A-Za-z\d!@#\$%\^&\*]{8,}$`
 )
 
 type Repository interface {
 	IsUniquePhoneNumber(phoneNumber string) (bool, error)
+	GetUserByPhoneNumber(phoneNumber string) (entity.User, error)
 }
 
 type Validator struct {
@@ -22,49 +21,4 @@ type Validator struct {
 func New(repository Repository) Validator {
 	return Validator{repo: repository}
 
-}
-
-func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) (map[string]string, error) {
-	const op = "uservalidator.RegisteValidationRequest"
-	var passwordRegex = regexp.MustCompile(`^[A-Za-z\d!@#\$%\^&\*]{8,}$`)
-
-	if vErr := validation.ValidateStruct(&req,
-		validation.Field(&req.Name, validation.Required, validation.Length(3, 50)),
-		validation.Field(&req.Password, validation.Required, validation.Match(passwordRegex)),
-		validation.Field(&req.PhoneNumber, validation.Required, validation.Match(regexp.MustCompile(`^09[0-9]{9}$`)),
-			validation.By(v.CheckPhonneNumberIsUniqeness)),
-	); vErr != nil {
-
-		FieldError := make(map[string]string)
-		errV, ok := vErr.(validation.Errors)
-		if ok {
-			for key, val := range errV {
-				if val != nil {
-					FieldError[key] = val.Error()
-				}
-			}
-		}
-
-		return FieldError, richerror.
-			New(op).
-			WithMassage(errormessage.InvalidInput).
-			WithKind(richerror.KindInvalid).
-			WithMeta(map[string]interface{}{"req": req}).
-			WithError(vErr)
-	}
-
-	return nil, nil
-}
-
-func (v Validator) CheckPhonneNumberIsUniqeness(value interface{}) error {
-	phoneNumber := value.(string)
-	if isUniq, err := v.repo.IsUniquePhoneNumber(phoneNumber); err != nil || !isUniq {
-		if err != nil {
-			return err
-		}
-		if !isUniq {
-			fmt.Errorf(errormessage.PhoneNumberNotUniq)
-		}
-	}
-	return nil
 }

@@ -13,7 +13,7 @@ import (
 
 type Repository interface {
 	Register(user entity.User) (entity.User, error)
-	GetUserByPhoneNumber(phoneNumber string) (entity.User, bool, error)
+	GetUserByPhoneNumber(phoneNumber string) (entity.User, error)
 	GetUserByID(userID uint) (entity.User, error)
 }
 
@@ -67,15 +67,12 @@ func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error)
 
 func (s Service) Login(req dto.LoginRequest) (dto.LoginResponse, error) {
 	const op = "servis.login"
-	user, exist, err := s.repo.GetUserByPhoneNumber(req.PhoneNumber)
+	user, err := s.repo.GetUserByPhoneNumber(req.PhoneNumber)
 	if err != nil {
 		return dto.LoginResponse{}, richerror.
 			New(op).
 			WithError(err).
 			WithMeta(map[string]interface{}{"phone req ": req.PhoneNumber})
-	}
-	if !exist {
-		return dto.LoginResponse{}, fmt.Errorf("username or password is not correct")
 	}
 
 	isvalid := hashPassword.VerifyPassword(req.Password, user.Password)
