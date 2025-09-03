@@ -1,13 +1,13 @@
 package httpserver
 
 import (
-	"game/servis"
+	"game/dto"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func (s Server) LoginHandler(c echo.Context) error {
-	var lReq servis.LoginRequest
+	var lReq dto.LoginRequest
 	if err := c.Bind(&lReq); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)
 

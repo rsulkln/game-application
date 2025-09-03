@@ -65,37 +65,23 @@ func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error)
 
 // TODO - please implement me
 
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-type LoginRequest struct {
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-}
-
-type LoginResponse struct {
-	User  dto.UserInfo  `json:"user"`
-	Token TokenResponse `json:"token"`
-}
-
-func (s Service) Login(req LoginRequest) (LoginResponse, error) {
+func (s Service) Login(req dto.LoginRequest) (dto.LoginResponse, error) {
 	const op = "servis.login"
 	user, exist, err := s.repo.GetUserByPhoneNumber(req.PhoneNumber)
 	if err != nil {
-		return LoginResponse{}, richerror.
+		return dto.LoginResponse{}, richerror.
 			New(op).
 			WithError(err).
 			WithMeta(map[string]interface{}{"phone req ": req.PhoneNumber})
 	}
 	if !exist {
-		return LoginResponse{}, fmt.Errorf("username or password is not correct")
+		return dto.LoginResponse{}, fmt.Errorf("username or password is not correct")
 	}
 
 	isvalid := hashPassword.VerifyPassword(req.Password, user.Password)
 
 	if !isvalid {
-		return LoginResponse{}, errors.New("username or password is not correct")
+		return dto.LoginResponse{}, errors.New("username or password is not correct")
 	}
 
 	//  TODO - you should work this function
@@ -103,44 +89,36 @@ func (s Service) Login(req LoginRequest) (LoginResponse, error) {
 	accesstoken, aErr := s.auth.CreateAccessToken(user, _const.AccessTokenSubject)
 
 	if aErr != nil {
-		return LoginResponse{}, aErr
+		return dto.LoginResponse{}, aErr
 	}
 
 	refreshToken, rErr := s.auth.CreateRefreshToken(user, _const.RefreshTokenSubject)
 
 	if rErr != nil {
-		return LoginResponse{}, fmt.Errorf("enxepted error %w", rErr)
+		return dto.LoginResponse{}, fmt.Errorf("enxepted error %w", rErr)
 
 	}
-	return LoginResponse{
+	return dto.LoginResponse{
 		User: dto.UserInfo{
 			ID:          user.ID,
 			PhoneNumber: user.PhoneNumber,
 			Name:        user.Name,
 		},
-		Token: TokenResponse{
+		Token: dto.TokenResponse{
 			AccessToken:  accesstoken,
 			RefreshToken: refreshToken,
 		},
 	}, nil
 }
 
-type ProfileRequest struct {
-	UserID uint `json:"user_id"`
-}
-
-type ProfileResponse struct {
-	Name string `json:"name"`
-}
-
-func (s Service) Profile(req ProfileRequest) (ProfileResponse, error) {
+func (s Service) Profile(req dto.ProfileRequest) (dto.ProfileResponse, error) {
 	const op = "servis.Profile"
 
 	user, err := s.repo.GetUserByID(req.UserID)
 	//log.Fatal("req :", req.UserID)
 	if err != nil {
 
-		return ProfileResponse{},
+		return dto.ProfileResponse{},
 			richerror.New(op).
 				WithError(err).
 				WithMeta(map[string]interface{}{"req": req})
@@ -149,5 +127,5 @@ func (s Service) Profile(req ProfileRequest) (ProfileResponse, error) {
 
 	fmt.Println(user.Name)
 
-	return ProfileResponse{Name: user.Name}, nil
+	return dto.ProfileResponse{Name: user.Name}, nil
 }

@@ -1,8 +1,8 @@
 package httpserver
 
 import (
+	"game/dto"
 	"game/pkg/httpmsg"
-	"game/servis"
 	"github.com/labstack/echo/v4"
 
 	"net/http"
@@ -22,7 +22,7 @@ func (s Server) UserProfileHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, pErr.Error())
 	}
 
-	response, pErr := s.userSvc.Profile(servis.ProfileRequest{UserID: claim.UserID})
+	response, pErr := s.userSvc.Profile(dto.ProfileRequest{UserID: claim.UserID})
 	if pErr != nil {
 		msg, code := httpmsg.CodeAndMessage(pErr)
 		return echo.NewHTTPError(code, msg)

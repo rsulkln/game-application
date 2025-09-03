@@ -8,12 +8,12 @@ import (
 	"strconv"
 )
 
-type Cleint struct {
+type Client struct {
 	// game service url //game-app/game
 	URL string
 }
 
-func (c Cleint) TotalScore(PlayerID uint) int {
+func (c Client) TotalScore(PlayerID uint) int {
 	response, _ := http.Get(c.URL + "/total-score?player_id=" + strconv.Itoa(int(PlayerID)))
 
 	type TotalScoreResponse struct {
