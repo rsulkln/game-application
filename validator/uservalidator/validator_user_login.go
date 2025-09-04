@@ -3,14 +3,14 @@ package uservalidator
 import (
 	"fmt"
 	"game/const/errormessage"
-	"game/dto"
+	"game/param"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"regexp"
 
 	"game/pkg/richerror"
 )
 
-func (v Validator) LoginValidationRequest(req dto.LoginRequest) (map[string]string, error) {
+func (v Validator) LoginValidationRequest(req param.LoginRequest) (map[string]string, error) {
 	const op = "uservalidator.RegisteValidationRequest"
 
 	if vErr := validation.ValidateStruct(&req,
@@ -22,7 +22,7 @@ func (v Validator) LoginValidationRequest(req dto.LoginRequest) (map[string]stri
 			validation.Match(regexp.MustCompile(PhoneNUmberRegex)).Error(errormessage.PhoneNumberIsNotValid),
 
 			validation.By(v.DosNumberIsExists)),
-			
+
 		validation.Field(&req.PhoneNumber, validation.Required),
 	); vErr != nil {
 

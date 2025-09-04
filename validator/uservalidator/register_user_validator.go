@@ -5,13 +5,13 @@ import (
 	"game/const/errormessage"
 	"regexp"
 
-	"game/dto"
+	"game/param"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"game/pkg/richerror"
 )
 
-func (v Validator) RegisteValidationRequest(req dto.RegisterRequest) (map[string]string, error) {
+func (v Validator) RegisteValidationRequest(req param.RegisterRequest) (map[string]string, error) {
 	const op = "uservalidator.RegisteValidationRequest"
 
 	if vErr := validation.ValidateStruct(&req,

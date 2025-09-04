@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	_const "game/const"
-	"game/dto"
 	"game/entity"
+	"game/param"
 	"game/pkg/hashPassword"
 	"game/pkg/richerror"
 	"game/repository/mysql"
@@ -31,12 +31,12 @@ func New(authgenerator AuthGenerator, repo *mysql.MySqlDb) Service {
 	return Service{auth: authgenerator, repo: repo}
 }
 
-func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error) {
+func (s Service) Register(req param.RegisterRequest) (param.RegisterResponse, error) {
 	//TODO- we should verify phone number by verification code
 
 	ps, err := hashPassword.HashPassword(req.Password)
 	if err != nil {
-		return dto.RegisterResponse{}, fmt.Errorf("i can't hashed password: %w", err)
+		return param.RegisterResponse{}, fmt.Errorf("i can't hashed password: %w", err)
 	}
 
 	user := entity.User{
@@ -49,10 +49,10 @@ func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error)
 	createdUser, rErr := s.repo.Register(user)
 	if rErr != nil {
 
-		return dto.RegisterResponse{}, fmt.Errorf("unxeopted error: %w", rErr)
+		return param.RegisterResponse{}, fmt.Errorf("unxeopted error: %w", rErr)
 	}
 
-	resp := dto.RegisterResponse{struct {
+	resp := param.RegisterResponse{struct {
 		ID          uint   `json:"id"`
 		PhoneNumber string `json:"phone_number"`
 		Name        string `json:"name"`
@@ -65,11 +65,11 @@ func (s Service) Register(req dto.RegisterRequest) (dto.RegisterResponse, error)
 
 // TODO - please implement me
 
-func (s Service) Login(req dto.LoginRequest) (dto.LoginResponse, error) {
+func (s Service) Login(req param.LoginRequest) (param.LoginResponse, error) {
 	const op = "servis.login"
 	user, err := s.repo.GetUserByPhoneNumber(req.PhoneNumber)
 	if err != nil {
-		return dto.LoginResponse{}, richerror.
+		return param.LoginResponse{}, richerror.
 			New(op).
 			WithError(err).
 			WithMeta(map[string]interface{}{"phone req ": req.PhoneNumber})
@@ -78,7 +78,7 @@ func (s Service) Login(req dto.LoginRequest) (dto.LoginResponse, error) {
 	isvalid := hashPassword.VerifyPassword(req.Password, user.Password)
 
 	if !isvalid {
-		return dto.LoginResponse{}, errors.New("username or password is not correct")
+		return param.LoginResponse{}, errors.New("username or password is not correct")
 	}
 
 	//  TODO - you should work this function
@@ -86,36 +86,36 @@ func (s Service) Login(req dto.LoginRequest) (dto.LoginResponse, error) {
 	accesstoken, aErr := s.auth.CreateAccessToken(user, _const.AccessTokenSubject)
 
 	if aErr != nil {
-		return dto.LoginResponse{}, aErr
+		return param.LoginResponse{}, aErr
 	}
 
 	refreshToken, rErr := s.auth.CreateRefreshToken(user, _const.RefreshTokenSubject)
 
 	if rErr != nil {
-		return dto.LoginResponse{}, fmt.Errorf("enxepted error %w", rErr)
+		return param.LoginResponse{}, fmt.Errorf("enxepted error %w", rErr)
 
 	}
-	return dto.LoginResponse{
-		User: dto.UserInfo{
+	return param.LoginResponse{
+		User: param.UserInfo{
 			ID:          user.ID,
 			PhoneNumber: user.PhoneNumber,
 			Name:        user.Name,
 		},
-		Token: dto.TokenResponse{
+		Token: param.TokenResponse{
 			AccessToken:  accesstoken,
 			RefreshToken: refreshToken,
 		},
 	}, nil
 }
 
-func (s Service) Profile(req dto.ProfileRequest) (dto.ProfileResponse, error) {
+func (s Service) Profile(req param.ProfileRequest) (param.ProfileResponse, error) {
 	const op = "servis.Profile"
 
 	user, err := s.repo.GetUserByID(req.UserID)
 	//log.Fatal("req :", req.UserID)
 	if err != nil {
 
-		return dto.ProfileResponse{},
+		return param.ProfileResponse{},
 			richerror.New(op).
 				WithError(err).
 				WithMeta(map[string]interface{}{"req": req})
@@ -124,5 +124,5 @@ func (s Service) Profile(req dto.ProfileRequest) (dto.ProfileResponse, error) {
 
 	fmt.Println(user.Name)
 
-	return dto.ProfileResponse{Name: user.Name}, nil
+	return param.ProfileResponse{Name: user.Name}, nil
 }
