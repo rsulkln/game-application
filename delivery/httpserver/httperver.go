@@ -16,10 +16,14 @@ type Server struct {
 	userHandler userhandler.Handler
 }
 
-func New(config config.Config, authSvc auth.Serivce, userSvc userservice.Service, userValidator uservalidator.Validator) Server {
+func New(config config.Config,
+	authSvc auth.Serivce,
+	userSvc userservice.Service,
+	userValidator uservalidator.Validator,
+) Server {
 	return Server{
 		config:      config,
-		userHandler: userhandler.New(authSvc, userSvc, userValidator),
+		userHandler: userhandler.New(config.Auth, authSvc, userSvc, userValidator),
 	}
 }
 

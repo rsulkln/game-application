@@ -1,27 +1,32 @@
 package userhandler
 
 import (
+	"fmt"
+	"game/auth"
+	"game/const/delconst"
 	"game/param"
 	"game/pkg/httpmsg"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-func (h Handler) UserProfileHandler(c echo.Context) error {
+func parseClaims(c echo.Context) *auth.Claims {
 	const op = "httpserver.UserProfileHandler"
 
-	authToken := c.Request().Header.Get("Authorization")
-
-	if authToken == "" {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Authorization header is empty")
+	claims := c.Get(delconst.AuthDeliverConstKey)
+	cl, ok := claims.(*auth.Claims)
+	if ok {
+		fmt.Println("Successfully")
+	} else {
+		panic("claim in not found!")
 	}
+	return cl
+}
 
-	claim, pErr := h.authSvc.ParseToken(authToken)
-	if pErr != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, pErr.Error())
-	}
+func (h Handler) UserProfileHandler(c echo.Context) error {
+	claims := parseClaims(c)
 
-	response, pErr := h.userSvc.Profile(param.ProfileRequest{UserID: claim.UserID})
+	response, pErr := h.userSvc.Profile(param.ProfileRequest{UserID: claims.UserID})
 	if pErr != nil {
 		msg, code := httpmsg.CodeAndMessage(pErr)
 		return echo.NewHTTPError(code, msg)
