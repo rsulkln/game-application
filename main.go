@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"game/auth"
 	"game/config"
 	_const "game/const"
@@ -9,11 +10,26 @@ import (
 	"game/repository/mysql"
 	userservice "game/servis"
 	"game/validator/uservalidator"
+	"os"
+	"strconv"
 )
+
+func getHttpPortToInteger(fallback int) int {
+	/*The getHttpPortToInteger function retrieves the GAMEAPLICATION_PORT value from the environment.
+	and converts it to an integer. If not found, it accepts the input value as the port.*/
+	port := os.Getenv("GAMEAPPLICATION_PORT")
+
+	outportt, err := strconv.Atoi(port)
+	if err != nil {
+		return fallback
+	}
+	fmt.Println(outportt)
+	return outportt
+}
 
 func main() {
 	cfg := config.Config{
-		HTTPServerConfig: config.HTTPServerConfig{Port: 8088},
+		HTTPServerConfig: config.HTTPServerConfig{getHttpPortToInteger(8012)},
 		Auth: auth.Config{
 			Signkey:           _const.JwtSignKey,
 			AccessExpireTime:  _const.AccessExpireTime,
