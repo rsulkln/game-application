@@ -13,13 +13,22 @@ import (
 func Load(configPath string) Config {
 	var k = koanf.New(".")
 
+	//road_map:
+	//GAMEAPP_.AUTH.SIGN__KEY
+	//AUTH.SIGN__KEY
+	//auth.sign__key
+	//auth.sign..key
+	///auth.sign_key
+
 	k.Load(confmap.Provider(DefaultConfig, "."), nil)
 
 	k.Load(file.Provider(configPath), yaml.Parser())
 
 	k.Load(env.Provider("GAMEAPP_", ".", func(s string) string {
-		return strings.Replace(strings.ToLower(
+		strings.Replace(strings.ToLower(
 			strings.TrimPrefix(s, "GAMEAPP_")), "_", ".", -1)
+
+		return strings.Replace(s, "..", "_", -1)
 
 	}), nil)
 
